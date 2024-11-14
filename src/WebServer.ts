@@ -22,7 +22,7 @@ export default class WebServer {
     return this.expressApp;
   }
 
-  listen(): Promise<void> {
+  start(): Promise<void> {
     return new Promise((resolve, reject) => {
       const { specifiedPort } = this;
       const app = this.build();
@@ -36,7 +36,7 @@ export default class WebServer {
     });
   }
 
-  close(): void {
+  stop(): void {
     const { server } = this;
     if (server) {
       server.close();
