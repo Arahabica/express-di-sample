@@ -1,0 +1,28 @@
+{
+  "name": "express-di-sample",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "type": "module",
+	"engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "lint": "biome format ./src",
+    "test": "vitest"
+  },
+  "author": "Arahabica",
+  "license": "MIT",
+  "description": "This is express DI sample",
+  "dependencies": {
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5"
+  }
+}
