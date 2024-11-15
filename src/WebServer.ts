@@ -1,17 +1,27 @@
 import express from 'express';
 import type { Express, Request, Response } from 'express';
 import type { Server } from 'http';
+import { AppStorage } from './types';
 
 type WebServerConfig = {
   port?: number;
 };
 
+type WebServerDependencies = {
+  storage: AppStorage;
+};
+
 export default class WebServer {
-  private readonly specifiedPort?: number;
   private expressApp: Express | undefined;
   private server: Server | undefined;
+  private readonly specifiedPort?: number;
+  private readonly storage: AppStorage;
 
-  constructor(config: WebServerConfig) {
+  constructor(
+    dependencies: WebServerDependencies,
+    config: WebServerConfig = {},
+  ) {
+    this.storage = dependencies.storage;
     this.specifiedPort = config.port;
   }
 
@@ -26,21 +36,29 @@ export default class WebServer {
     return new Promise((resolve, reject) => {
       const { specifiedPort } = this;
       const app = this.build();
-      this.server = app
-        .listen(specifiedPort || 0, () => {
+
+      const server = app.listen(specifiedPort || 0);
+      this.server = server;
+      this.expressApp = app;
+
+      server
+        .on('error', reject)
+        .on('listening', () => {
           console.log('Server running at PORT: ', this.runningPort());
           resolve();
-        })
-        .on('error', reject);
-      this.expressApp = app;
+        });
     });
   }
 
-  stop(): void {
-    const { server } = this;
-    if (server) {
-      server.close();
-    }
+  stop(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const { server } = this;
+      if (!server) return resolve();
+      server.close((err) => {
+        if (err) return reject();
+        resolve();
+      });
+    });
   }
 
   private build(): Express {
@@ -48,9 +66,19 @@ export default class WebServer {
     app.get('/', (req: Request, res: Response) => {
       res.send('Hello World!');
     });
+    app.get('/upload', async (req: Request, res: Response) => {
+      const { key, value } = req.query;
+      await this.storage.upload(key as string, value as string);
+      res.send('OK');
+    });
+    app.get('/download', async (req: Request, res: Response) => {
+      const { key } = req.query;
+      const value = await this.storage.download(key as string);
+      res.send(value || 'Not found');
+    });
     return app;
   }
-  private runningPort(): number | undefined {
+  runningPort(): number | undefined {
     if (!this.server) {
       return undefined;
     }
@@ -58,6 +86,7 @@ export default class WebServer {
     if (address === null || typeof address === 'string') {
       return undefined;
     }
+    console.log('c');
     return address.port;
   }
 }
