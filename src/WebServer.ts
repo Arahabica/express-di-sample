@@ -86,7 +86,6 @@ export default class WebServer {
     if (address === null || typeof address === 'string') {
       return undefined;
     }
-    console.log('c');
     return address.port;
   }
 }
